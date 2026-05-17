@@ -4,6 +4,7 @@ import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
+import 'package:parkliapp/features/forgotPass/change_pass.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -87,8 +88,10 @@ class _AppEntryState extends State<AppEntry> {
 
       if (!mounted) return;
 
-      navigatorKey.currentState?.pushNamedAndRemoveUntil(
-        '/changePassword',
+      navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const ChangePasswordScreen(isResetMode: true),
+        ),
         (route) => false,
       );
       return;

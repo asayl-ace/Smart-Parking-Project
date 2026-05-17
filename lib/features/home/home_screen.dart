@@ -18,6 +18,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:parkliapp/core/services/notifications_service.dart';
 import 'package:parkliapp/core/services/app_session_service.dart';
 import 'notifications.dart';
+import 'package:parkliapp/core/services/booking_service.dart';
+import 'package:parkliapp/features/home/models/booking_item.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -30,7 +32,9 @@ class _HomeScreenState extends State<HomeScreen> {
   final PlaceService _placeService = PlaceService();
   final NotificationsService _notificationsService = NotificationsService();
   final AppSessionService _appSessionService = AppSessionService();
+  final BookingService _bookingService = BookingService();
 
+  List<Place> _mostVisitedPlaces = [];
   int _currentIndex = 0;
   bool _showSearchSheet = false;
   bool _showFilterSheet = false;
@@ -50,8 +54,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _selectedTime = AppData.translate('Now', 'الآن');
-    _loadPlaces();
-    _checkNotifications(); // نتأكد من وجود إشعارات عند التشغيل
+    _loadHomeData();
+    _checkNotifications();
   }
 
   // دالة  للتحقق من وجود إشعارات فعلية في السيرفر
@@ -85,6 +89,60 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _showSearchSheet = false;
     });
+  }
+
+  Future<void> _loadHomeData() async {
+    try {
+      final places = await _placeService.getAllPlaces();
+
+      final session = await _appSessionService.getCurrentSession();
+
+      List<Place> visited = [];
+
+      if (session != null) {
+        final bookings = await _bookingService.getUserBookings(session.userId);
+
+        final Map<String, int> visitCount = {};
+
+        for (final booking in bookings) {
+          if (booking.status == 'completed' || booking.status == 'upcoming') {
+            visitCount[booking.placeId] =
+                (visitCount[booking.placeId] ?? 0) + 1;
+          }
+        }
+
+        final sortedPlaceIds = visitCount.keys.toList()
+          ..sort((a, b) => visitCount[b]!.compareTo(visitCount[a]!));
+
+        visited = sortedPlaceIds
+            .map((placeId) {
+              try {
+                return places.firstWhere((place) => place.id == placeId);
+              } catch (_) {
+                return null;
+              }
+            })
+            .whereType<Place>()
+            .take(4)
+            .toList();
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        _allPlaces = places;
+        _mostVisitedPlaces = visited;
+        _isLoadingPlaces = false;
+        _placesError = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _placesError = e.toString();
+        _isLoadingPlaces = false;
+      });
+    }
   }
 
   Future<void> _loadPlaces() async {
@@ -123,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Place> get _filteredVisitedPlaces {
     final selectedMinutes = _mapSelectedTimeToMinutes(_selectedTime);
 
-    return _allPlaces
+    return _mostVisitedPlaces
         .where((place) {
           final matchesDistance = place.distanceKm <= _selectedDistance;
           final matchesTime = place.availableInMinutes <= selectedMinutes;
