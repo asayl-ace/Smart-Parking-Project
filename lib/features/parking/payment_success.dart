@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:parkliapp/app_data.dart'; 
-import 'parking_ticket.dart'; 
+import 'package:parkliapp/app_data.dart';
+import 'parking_ticket.dart';
 
 class PaymentSuccessScreen extends StatefulWidget {
-  const PaymentSuccessScreen({super.key});
+  final bool isFreeBooking;
+
+  const PaymentSuccessScreen({
+    super.key,
+    this.isFreeBooking = false,
+  });
 
   @override
   State<PaymentSuccessScreen> createState() => _PaymentSuccessScreenState();
@@ -13,7 +18,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen> {
   @override
   void initState() {
     super.initState();
-    //  ينتظر 3 ثواني ثم ينقل المستخدم للتذكرة تلقائياً
+
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
         Navigator.pushReplacement(
@@ -26,6 +31,26 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final titleText = widget.isFreeBooking
+        ? AppData.translate(
+            'Booking\nConfirmed!',
+            'تم تأكيد\nالحجز!',
+          )
+        : AppData.translate(
+            'Payment\nSuccess!',
+            'تم الدفع\nبنجاح!',
+          );
+
+    final bodyText = widget.isFreeBooking
+        ? AppData.translate(
+            'Your free parking booking\nhas been confirmed.',
+            'تم تأكيد حجز الموقف\nالمجاني الخاص بك.',
+          )
+        : AppData.translate(
+            '1 parking slot\nhas been booked for you.',
+            'تم حجز موقف سيارة واحد\nباسمك الآن.',
+          );
+
     return Directionality(
       textDirection: AppData.isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
@@ -41,7 +66,6 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen> {
           ),
           child: Stack(
             children: [
-              // زر الإغلاق (X) ينقل للتذكرة فوراً
               Positioned(
                 left: AppData.isArabic ? null : 20,
                 right: AppData.isArabic ? 20 : null,
@@ -51,30 +75,31 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen> {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const ParkingTicket()),
+                      MaterialPageRoute(
+                        builder: (context) => const ParkingTicket(),
+                      ),
                     );
                   },
                 ),
               ),
-              
               Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // صورة النجاح
                     Image.asset(
                       'assets/images/success.png',
                       width: 150,
                       height: 150,
                       fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => 
-                          const Icon(Icons.check_circle, size: 150, color: Color(0xFF76D75C)),
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.check_circle,
+                        size: 150,
+                        color: Color(0xFF76D75C),
+                      ),
                     ),
-                    
                     const SizedBox(height: 60),
-
                     Text(
-                      AppData.translate('Payment\nSuccess!', 'تم الدفع\nبنجاح!'),
+                      titleText,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: Colors.white,
@@ -83,14 +108,9 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen> {
                         height: 1.2,
                       ),
                     ),
-                    
                     const SizedBox(height: 80),
-
                     Text(
-                      AppData.translate(
-                        '1 parking slot\nhas been booked for you.',
-                        'تم حجز موقف سيارة واحد\nباسمك الآن.'
-                      ),
+                      bodyText,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: Color(0xFFE2E9FD),
@@ -99,10 +119,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen> {
                         height: 1.7,
                       ),
                     ),
-                    
                     const SizedBox(height: 20),
-                    
-                    //  تحميل بسيط يوضح قرب ظهور التذكرة
                     const SizedBox(
                       width: 20,
                       height: 20,
@@ -113,7 +130,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen> {
                     ),
                   ],
                 ),
-                ),
+              ),
             ],
           ),
         ),

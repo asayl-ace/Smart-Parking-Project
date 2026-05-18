@@ -7,6 +7,10 @@ import 'package:parkliapp/features/home/models/place.dart';
 import 'package:parkliapp/features/home/models/parking_spot.dart';
 import 'package:parkliapp/features/parking/payment_method.dart';
 import 'package:parkliapp/features/parking/parking_detail2.dart';
+import 'package:parkliapp/core/services/booking_service.dart';
+import 'package:parkliapp/core/services/app_session_service.dart';
+import 'package:parkliapp/features/parking/payment_success.dart';
+import 'package:parkliapp/features/home/my_vehicles_screen.dart';
 
 class ParkingDetail1 extends StatefulWidget {
   const ParkingDetail1({super.key});
@@ -19,8 +23,11 @@ class _ParkingDetail1State extends State<ParkingDetail1> {
   final PlaceService _placeService = PlaceService();
   final ParkingService _parkingService = ParkingService();
   final VehicleService _vehicleService = VehicleService();
+  final BookingService _bookingService = BookingService();
+  final AppSessionService _appSessionService = AppSessionService();
 
-  double _currentValue = AppData.durationHours < 1 ? 1.0 : AppData.durationHours.toDouble();
+  double _currentValue =
+      AppData.durationHours < 1 ? 1.0 : AppData.durationHours.toDouble();
 
   Place? _place;
   ParkingSpot? _spot;
@@ -40,21 +47,30 @@ class _ParkingDetail1State extends State<ParkingDetail1> {
       final spotId = AppData.selectedSpotId;
       if (placeId == null || spotId == null) {
         setState(() {
-          _error = AppData.translate('Incomplete information', 'بيانات غير مكتملة');
+          _error =
+              AppData.translate('Incomplete information', 'بيانات غير مكتملة');
           _isLoading = false;
         });
         return;
       }
       final place = await _placeService.getPlaceById(placeId);
       final spot = await _parkingService.getSpotById(spotId);
-      final vehicle = AppData.selectedVehicleId != null ? await _vehicleService.getVehicleById(AppData.selectedVehicleId!) : null;
+      final vehicle = AppData.selectedVehicleId != null
+          ? await _vehicleService.getVehicleById(AppData.selectedVehicleId!)
+          : null;
 
       if (!mounted) return;
       setState(() {
-        _place = place; _spot = spot; _vehicle = vehicle; _isLoading = false;
+        _place = place;
+        _spot = spot;
+        _vehicle = vehicle;
+        _isLoading = false;
       });
     } catch (e) {
-      setState(() { _error = AppData.translate('Error loading', 'خطأ في التحميل'); _isLoading = false; });
+      setState(() {
+        _error = AppData.translate('Error loading', 'خطأ في التحميل');
+        _isLoading = false;
+      });
     }
   }
 
@@ -67,22 +83,26 @@ class _ParkingDetail1State extends State<ParkingDetail1> {
         body: SafeArea(
           child: Column(
             children: [
-              _buildHeader(AppData.translate('Parking detail', 'تفاصيل الموقف')),
+              _buildHeader(
+                  AppData.translate('Parking detail', 'تفاصيل الموقف')),
               Expanded(
-                child: _isLoading 
-                  ? const Center(child: CircularProgressIndicator(color: Color(0xFF237D8C)))
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        children: [
-                          Image.asset('assets/images/parkdetial.png', height: 220),
-                          const SizedBox(height: 30),
-                          _buildTimeSlider(),
-                          const SizedBox(height: 30),
-                          _buildInfoCard(),
-                        ],
+                child: _isLoading
+                    ? const Center(
+                        child:
+                            CircularProgressIndicator(color: Color(0xFF237D8C)))
+                    : SingleChildScrollView(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          children: [
+                            Image.asset('assets/images/parkdetial.png',
+                                height: 220),
+                            const SizedBox(height: 30),
+                            _buildTimeSlider(),
+                            const SizedBox(height: 30),
+                            _buildInfoCard(),
+                          ],
+                        ),
                       ),
-                    ),
               ),
               _buildBottomActionArea(),
             ],
@@ -96,7 +116,8 @@ class _ParkingDetail1State extends State<ParkingDetail1> {
     return Container(
       height: 80,
       decoration: const BoxDecoration(
-        gradient: LinearGradient(colors: [Color(0xFF195A64), Color(0xFF34B5CA)]),
+        gradient:
+            LinearGradient(colors: [Color(0xFF195A64), Color(0xFF34B5CA)]),
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
       ),
       child: Stack(
@@ -106,11 +127,17 @@ class _ParkingDetail1State extends State<ParkingDetail1> {
             right: AppData.isArabic ? 12 : null,
             top: 20,
             child: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+              icon: const Icon(Icons.arrow_back_ios_new,
+                  color: Colors.white, size: 20),
               onPressed: () => Navigator.pop(context),
             ),
           ),
-          Center(child: Text(title, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold))),
+          Center(
+              child: Text(title,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold))),
         ],
       ),
     );
@@ -122,14 +149,22 @@ class _ParkingDetail1State extends State<ParkingDetail1> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text("${_currentValue.toInt()} ${AppData.translate('Hours', 'ساعة')}", style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+                "${_currentValue.toInt()} ${AppData.translate('Hours', 'ساعة')}",
+                style: const TextStyle(fontWeight: FontWeight.bold)),
             Text(AppData.translate('24 h', '٢٤ ساعة')),
           ],
         ),
         Slider(
-          value: _currentValue, min: 1.0, max: 24.0, divisions: 23,
+          value: _currentValue,
+          min: 1.0,
+          max: 24.0,
+          divisions: 23,
           activeColor: const Color(0xFF237D8C),
-          onChanged: (v) => setState(() { _currentValue = v; AppData.durationHours = v.toInt(); }),
+          onChanged: (v) => setState(() {
+            _currentValue = v;
+            AppData.durationHours = v.toInt();
+          }),
         ),
       ],
     );
@@ -138,14 +173,19 @@ class _ParkingDetail1State extends State<ParkingDetail1> {
   Widget _buildInfoCard() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: const Color(0xFFE3F0F2), borderRadius: BorderRadius.circular(15)),
+      decoration: BoxDecoration(
+          color: const Color(0xFFE3F0F2),
+          borderRadius: BorderRadius.circular(15)),
       child: Column(
         children: [
-          _rowInfo(AppData.translate('VEHICLE', 'المركبة'), _vehicle?.displayPlate ?? '---'),
+          _rowInfo(AppData.translate('VEHICLE', 'المركبة'),
+              _vehicle?.displayPlate ?? '---'),
           const Divider(),
-          _rowInfo(AppData.translate('LOCATION', 'الموقع'), _place?.name ?? '---'),
+          _rowInfo(
+              AppData.translate('LOCATION', 'الموقع'), _place?.name ?? '---'),
           const Divider(),
-          _rowInfo(AppData.translate('TOTAL', 'الإجمالي'), _place?.priceLabel ?? 'FREE'),
+          _rowInfo(AppData.translate('TOTAL', 'الإجمالي'),
+              _place?.priceLabel ?? 'FREE'),
         ],
       ),
     );
@@ -173,40 +213,182 @@ class _ParkingDetail1State extends State<ParkingDetail1> {
   Widget _buildBottomActionArea() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(blurRadius: 5, color: Colors.black12)]),
+      decoration: const BoxDecoration(
+          color: Colors.white,
+          boxShadow: [BoxShadow(blurRadius: 5, color: Colors.black12)]),
       child: Row(
         children: [
           InkWell(
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ParkingDetail2())),
+            onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const ParkingDetail2())),
             child: Container(
               padding: const EdgeInsets.all(12),
-              decoration: const BoxDecoration(color: Color(0xFFC3E6EC), shape: BoxShape.circle),
-              child: const Icon(Icons.calendar_month_outlined, color: Color(0xFF237D8C)),
+              decoration: const BoxDecoration(
+                  color: Color(0xFFC3E6EC), shape: BoxShape.circle),
+              child: const Icon(Icons.calendar_month_outlined,
+                  color: Color(0xFF237D8C)),
             ),
           ),
           const SizedBox(width: 15),
           Expanded(
             child: ElevatedButton(
-              onPressed: () {
-                // 1. تحديد وقت البداية: إذا لم يتم اختياره من التقويم، نستخدم الوقت الحالي
-                DateTime start = AppData.bookingStartTime ?? DateTime.now();
-                
-                // 2. حساب وقت النهاية: البداية + الساعات المحددة بالسلايدر
-                DateTime end = start.add(Duration(hours: AppData.durationHours));
+              onPressed: () async {
+                final session = await _appSessionService.getCurrentSession();
 
-                // 3. تخزين القيم في AppData بشكل نهائي لإرسالها في صفحة الدفع
+                if (session == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        AppData.translate(
+                          'You need to log in first',
+                          'يجب تسجيل الدخول أولاً',
+                        ),
+                      ),
+                    ),
+                  );
+                  return;
+                }
+
+                if (_place == null || _spot == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        AppData.translate(
+                          'Booking information is incomplete',
+                          'بيانات الحجز غير مكتملة',
+                        ),
+                      ),
+                    ),
+                  );
+                  return;
+                }
+
+                final vehicles =
+                    await _vehicleService.getMyVehicles(session.userId);
+
+                if (vehicles.isEmpty) {
+                  // ما عنده أي مركبة
+                  if (!mounted) return;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        AppData.translate(
+                          'Please add a vehicle first.',
+                          'يرجى إضافة مركبة أولاً.',
+                        ),
+                      ),
+                    ),
+                  );
+
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const MyVehiclesScreen(),
+                    ),
+                  );
+                  return;
+                }
+
+                if (AppData.selectedVehicleId == null) {
+                  // عنده مركبات لكن ما اختار
+                  if (!mounted) return;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        AppData.translate(
+                          'Please select a vehicle first.',
+                          'يرجى اختيار مركبة أولاً.',
+                        ),
+                      ),
+                    ),
+                  );
+
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const MyVehiclesScreen(),
+                    ),
+                  );
+                  return;
+                }
+
+                DateTime start = AppData.bookingStartTime ?? DateTime.now();
+                DateTime end =
+                    start.add(Duration(hours: AppData.durationHours));
+
                 AppData.bookingStartTime = start;
                 AppData.bookingEndTime = end;
+                AppData.selectedDate = start;
 
-                // 4. الانتقال لصفحة الدفع
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const PaymentMethodScreen()));
+                if (_place!.pricingType == 'free') {
+                  try {
+                    final bookingId = await _bookingService.createBooking(
+                      userId: session.userId,
+                      placeId: _place!.id,
+                      spotId: _spot!.id,
+                      spotLabel: _spot!.label,
+                      bookedAt: start,
+                      startTime: start,
+                      endTime: end,
+                    );
+
+                    AppData.currentBookingId = bookingId;
+
+                    await _bookingService.createNotification(
+                      userId: session.userId,
+                      titleEn: 'Booking confirmed',
+                      titleAr: 'تم تأكيد الحجز',
+                      bodyEn:
+                          'Your free parking booking has been confirmed. Your timer has started.',
+                      bodyAr: 'تم تأكيد حجزك المجاني. بدأ المؤقت الآن.',
+                    );
+
+                    if (!mounted) return;
+
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const PaymentSuccessScreen(isFreeBooking: true),
+                      ),
+                    );
+                  } catch (e) {
+                    if (!mounted) return;
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          AppData.translate(
+                            'Failed to confirm booking',
+                            'فشل تأكيد الحجز',
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
+                  return;
+                }
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const PaymentMethodScreen(),
+                  ),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF237D8C),
                 minimumSize: const Size(double.infinity, 52),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(28)),
               ),
-              child: Text(AppData.translate('Confirm & Pay', 'تأكيد ودفع'), style: const TextStyle(color: Colors.white)),
+              child: Text(AppData.translate('Confirm & Pay', 'تأكيد ودفع'),
+                  style: const TextStyle(color: Colors.white)),
             ),
           ),
         ],
