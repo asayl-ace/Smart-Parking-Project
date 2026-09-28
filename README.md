@@ -95,5 +95,5 @@ This project was engineered and developed as part of a Senior Graduation Project
 ### Quick Setup
 1. **Clone the repository:**
    ```bash
-git clone https://github.com/asayl-ace/Smart-Parking-Project.git
-```
+   git clone https://github.com/asayl-ace/Smart-Parking-Project.git
+
