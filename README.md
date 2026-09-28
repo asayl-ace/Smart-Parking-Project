@@ -83,3 +83,17 @@ ParkLi relies on a modern serverless backend paired with a mobile client[cite: 1
 ## 🎓 Academic Context
 
 This project was engineered and developed as part of a Senior Graduation Project for the **Bachelor of Science in Computer Science** degree at **Qassim University**[cite: 1].
+
+---
+
+## 🚀 Getting Started
+### Prerequisites
+* Flutter SDK (v3.x or higher)
+* Android Studio / Visual Studio Code
+* Dart SDK
+
+### Quick Setup
+1. **Clone the repository:**
+   ```bash
+git clone https://github.com/asayl-ace/Smart-Parking-Project.git
+```
